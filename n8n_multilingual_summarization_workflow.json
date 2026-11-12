@@ -1,0 +1,562 @@
+{
+  "name": "Multilingual Summarization Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "Document_Uploads_For_Summarization",
+          "mode": "list",
+          "cachedResultName": "Document_Uploads_For_Summarization"
+        },
+        "event": "fileCreated"
+      },
+      "id": "node-google-drive-trigger",
+      "name": "Google Drive Trigger",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        }
+      },
+      "id": "node-download-file",
+      "name": "Download file",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "data"
+      },
+      "id": "node-extract-from-file",
+      "name": "Extract from File",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        640,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Detect the primary language of the document.\nReturn only the language name.\nDocument content:\n{{ $json.text }}"
+      },
+      "id": "node-language-detection",
+      "name": "Language Detection",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        860,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gemini-2.5-flash",
+        "options": {}
+      },
+      "id": "node-chat-model-lang",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        860,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a multilingual expert summarizer.\nSummarize the content below into a concise, accurate multi-paragraph summary in the below language.\nRemove redundancies and highlight the most important points.\n\nDocument:\n{{ $('Extract from File').item.json.text }}\n\nLanguage:\n{{ $json.text }}\n\nReturn only the summary."
+      },
+      "id": "node-summarization",
+      "name": "Summarization",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        1120,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gemini-2.5-flash",
+        "options": {}
+      },
+      "id": "node-chat-model-sum",
+      "name": "Google Gemini Chat Model1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Translate the summary below into ENGLISH.\nEnsure the translation is accurate, professional, and maintains the original meaning.\n\nSummary:\n{{ $('Summarization').item.json.text }}"
+      },
+      "id": "node-english-translation",
+      "name": "English Translation",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        1380,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gemini-2.5-flash",
+        "options": {}
+      },
+      "id": "node-chat-model-en",
+      "name": "Google Gemini Chat Model2",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1380,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Translate the summary below into Hindi.\nEnsure the translation is accurate, professional, and maintains the original meaning.\n\nSummary:\n{{ $('Summarization').item.json.text }}"
+      },
+      "id": "node-hindi-translation",
+      "name": "Hindi Translation",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        1640,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gemini-2.5-flash",
+        "options": {}
+      },
+      "id": "node-chat-model-hi",
+      "name": "Google Gemini Chat Model3",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1640,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Translate the summary below into Spanish.\nEnsure the translation is accurate, professional, and maintains the original meaning.\n\nSummary:\n{{ $('Summarization').item.json.text }}"
+      },
+      "id": "node-spanish-translation",
+      "name": "Spanish Translation",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        860,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gemini-2.5-flash",
+        "options": {}
+      },
+      "id": "node-chat-model-es",
+      "name": "Google Gemini Chat Model4",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        860,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Translate the summary below into French.\nEnsure the translation is accurate, professional, and maintains the original meaning.\n\nSummary:\n{{ $('Summarization').item.json.text }}"
+      },
+      "id": "node-french-translation",
+      "name": "French Translation",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        1120,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gemini-2.5-flash",
+        "options": {}
+      },
+      "id": "node-chat-model-fr",
+      "name": "Google Gemini Chat Model5",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Translate the summary below into German.\nEnsure the translation is accurate, professional, and maintains the original meaning.\n\nSummary:\n{{ $('Summarization').item.json.text }}"
+      },
+      "id": "node-german-translation",
+      "name": "German Translation",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        1380,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gemini-2.5-flash",
+        "options": {}
+      },
+      "id": "node-chat-model-de",
+      "name": "Google Gemini Chat Model6",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1380,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Translate the summary below into Japanese.\nEnsure the translation is accurate, professional, and maintains the original meaning.\n\nSummary:\n{{ $('Summarization').item.json.text }}"
+      },
+      "id": "node-japanese-translation",
+      "name": "Japanese Translation",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        1640,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gemini-2.5-flash",
+        "options": {}
+      },
+      "id": "node-chat-model-ja",
+      "name": "Google Gemini Chat Model7",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1640,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "Summary_Folder",
+          "mode": "list",
+          "cachedResultName": "Summary_Folder"
+        },
+        "title": "={{ $('Google Drive Trigger').item.json.name }} - Multilingual Summary"
+      },
+      "id": "node-create-doc",
+      "name": "Create a document",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "simple": true,
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "=Document Title: {{ $('Google Drive Trigger').item.json.name }}\nDetected Language: {{ $('Language Detection').item.json.text }}\n\nSummary (English):\n{{ $('English Translation').item.json.text }}\n\nSummary (Hindi):\n{{ $('Hindi Translation').item.json.text }}\n\nSummary (Spanish):\n{{ $('Spanish Translation').item.json.text }}\n\nSummary (French):\n{{ $('French Translation').item.json.text }}\n\nSummary (German):\n{{ $('German Translation').item.json.text }}\n\nSummary (Japanese):\n{{ $('Japanese Translation').item.json.text }}"
+            }
+          ]
+        }
+      },
+      "id": "node-update-doc",
+      "name": "Update a document",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        2120,
+        720
+      ]
+    }
+  ],
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Language Detection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Language Detection",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Language Detection": {
+      "main": [
+        [
+          {
+            "node": "Summarization",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Summarization",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarization": {
+      "main": [
+        [
+          {
+            "node": "English Translation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "English Translation",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "English Translation": {
+      "main": [
+        [
+          {
+            "node": "Hindi Translation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Hindi Translation",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hindi Translation": {
+      "main": [
+        [
+          {
+            "node": "Spanish Translation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Spanish Translation",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spanish Translation": {
+      "main": [
+        [
+          {
+            "node": "French Translation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "French Translation",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "French Translation": {
+      "main": [
+        [
+          {
+            "node": "German Translation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "German Translation",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "German Translation": {
+      "main": [
+        [
+          {
+            "node": "Japanese Translation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model7": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Japanese Translation",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Japanese Translation": {
+      "main": [
+        [
+          {
+            "node": "Create a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a document": {
+      "main": [
+        [
+          {
+            "node": "Update a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
